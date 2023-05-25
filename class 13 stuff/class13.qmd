@@ -1,0 +1,184 @@
+---
+title: "class13"
+author: "Grant Reeves"
+format: html
+---
+
+##Class 13: RNA-Seq analysis mini-project
+
+#Section 1. Differential Expression Analysis
+
+First we will load our data into 
+```{r}
+library(DESeq2)
+```
+load our data
+```{r}
+metaFile <- "GSE37704_metadata.csv"
+countFile <- "GSE37704_featurecounts.csv"
+```
+
+
+```{r}
+# Import metadata and take a peak
+colData = read.csv(metaFile, row.names=1)
+head(colData)
+```
+
+
+
+```{r}
+# Import countdata
+countData = read.csv(countFile, row.names=1)
+head(countData)
+```
+First we need to remove that not useful first column 
+
+```{r}
+# Note we need to remove the odd first $length col
+countData <- as.matrix(countData[,-1])
+head(countData)
+```
+
+```{r}
+# Filter count data where you have 0 read count across all samples.
+zero_counts <- rowSums(countData) == 0
+
+newcountData = countData[!zero_counts, ]
+head(newcountData)
+```
+
+How many genes do we have left over after excluding all the ones that are=0? `15975` 
+```{r}
+nrow(newcountData)
+```
+if they are=0 that means that the genes aren't expressed so we aren't interested in them currently. 
+
+#Running DESeq2
+
+```{r}
+dds = DESeqDataSetFromMatrix(countData=newcountData,
+                             colData=colData,
+                             design=~condition)
+```
+
+```{r}
+dds = DESeq(dds)
+```
+
+```{r}
+res <- results(dds)
+res
+```
+#Adding Gene Annotations
+
+```{r}
+library("AnnotationDbi")
+library("org.Hs.eg.db")
+```
+```{r}
+columns(org.Hs.eg.db)
+```
+
+```{r}
+res$entrez = mapIds(org.Hs.eg.db,
+                    keys=row.names(res), 
+                    keytype="ENSEMBL",
+                    column="ENTREZID",
+                    multiVals="first")
+```
+
+```{r}
+res$symbol = mapIds(org.Hs.eg.db,
+                    keys=row.names(res), 
+                    keytype="ENSEMBL",
+                    column="SYMBOL",
+                    multiVals="first")
+```
+
+```{r}
+head(res, 10)
+```
+
+#Now lets save these results as a csv file
+
+```{r}
+res = res[order(res$pvalue),]
+write.csv(res, file="deseq_results.csv")
+```
+
+
+
+#Making a Volcono plot with this data
+
+```{r}
+plot( res$log2FoldChange, -log(res$padj) )
+```
+
+#Now I will improve the plot by making it colorful
+
+```{r}
+# Make a color vector for all genes
+mycols <- rep("gray", nrow(res) )
+
+# Color red the genes with absolute fold change above 2
+mycols[ abs(res$log2FoldChange) > 2 ] <- "red"
+
+# Color blue those with adjusted p-value less than 0.01
+#  and absolute fold change more than 2
+inds <- (abs(res$padj) < 0.01) & (abs(res$log2FoldChange) > 2 )
+mycols[ inds ] <- "blue"
+
+plot( res$log2FoldChange, -log(res$padj), col=mycols, xlab="Log2(FoldChange)", ylab="-Log(P-value)" )
+```
+
+##Section 2:Pathway Analysis
+
+```{r}
+library(pathview)
+library(gage)
+library(gageData)
+```
+
+```{r}
+data(kegg.sets.hs)
+data(sigmet.idx.hs)
+
+# Focus on signaling and metabolic pathways only
+kegg.sets.hs = kegg.sets.hs[sigmet.idx.hs]
+
+# Examine the first 3 pathways
+head(kegg.sets.hs, 3)
+```
+
+```{r}
+foldchanges = res$log2FoldChange
+names(foldchanges) = res$entrez
+head(foldchanges)
+```
+
+```{r}
+# Get the results
+keggres = gage(foldchanges, gsets=kegg.sets.hs)
+attributes(keggres)
+```
+
+```{r}
+head(keggres$less)
+```
+
+```{r}
+pathview(gene.data=foldchanges, pathway.id="hsa04110")
+```
+
+![Cell Cycle Up and Down Regulated Gened](hsa04110.pathview.png)
+
+
+
+
+
+
+
+
+
+
