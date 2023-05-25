@@ -1,0 +1,142 @@
+---
+title: "class10"
+author: "Grant Reeves"
+format: html
+editor: visual
+---
+
+## Class 10: Structural Bioinformatics 2 
+
+# Comparative structure analysis of Adenylate Kinase
+```{r}
+library(ggplot2)
+```
+
+```{r}
+# Install packages in the R console NOT your Rmd/Quarto file
+
+#install.packages("bio3d")
+#install.packages("devtools")
+#install.packages("BiocManager")
+
+#BiocManager::install("msa")
+#devtools::install_bitbucket("Grantlab/bio3d-view")
+```
+
+>Q10. Which of the packages above is found only on BioConductor and not CRAN? 
+
+BiocManager::install("msa") we know this becasue it says BioManager 
+
+>Q11. Which of the above packages is not found on BioConductor or CRAN?: 
+
+devtools::install_bitbucket("Grantlab/bio3d-view") and we know that becasue it has a separate install command 
+
+>Q12. True or False? Functions from the devtools package can be used to install packages from GitHub and BitBucket? 
+
+True
+
+```{r}
+library(bio3d)
+
+aa <- get.seq("1ake_A")
+aa
+```
+
+We can now run BLAST with this sequence 
+
+```{r}
+#b <- blast.pdb(aa)
+
+```
+
+```{r}
+#hits <- plot(b)
+```
+
+```{r}
+# List out some 'top hits'
+
+#head(hits$pdb.id)
+```
+
+```{r}
+hits <- NULL
+hits$pdb.id <- c('1AKE_A','6S36_A','6RZE_A','3HPR_A','1E4V_A','5EJE_A','1E4Y_A','3X2S_A','6HAP_A','6HAM_A','4K46_A','3GMT_A','4PZL_A')
+```
+
+```{r}
+# Download releated PDB files
+files <- get.pdb(hits$pdb.id, path="pdbs", split=TRUE, gzip=TRUE)
+```
+# Align and superpose structures
+
+Next we will use the pdbaln() function to align and also optionally fit the identified PDB structures.
+
+```{r}
+# Align releated PDBs
+pdbs <- pdbaln(files, fit = TRUE, exefile="msa")
+pdbs
+```
+we can look at the alignments ourselves just by writing `pdbs`, but thats not really that useful becaue my eyes arent good at interpreting big data like this 
+
+we can plot our sequence allignment like this: 
+
+```{r}
+# Vector containing PDB codes for figure axis
+ids <- basename.pdb(pdbs$id)
+
+# Draw schematic alignment
+plot(pdbs, labels=ids)
+```
+
+Now we have all this data we have downloaded and organized, we should perform some analysis on it, lets do a PCA 
+
+```{r}
+# Perform PCA
+
+pc.xray <- pca(pdbs)
+plot(pc.xray)
+```
+
+This plot shows the results on PCA analysis on Adenylate kinase x-ray structures. Each dot represents one possible PCA.
+
+We can cluster the structures by RMSD 
+
+```{r}
+rmsd(pdbs)
+```
+
+```{r}
+# Calculate RMSD
+rd <- rmsd(pdbs)
+
+# Structure-based clustering
+hc.rd <- hclust(dist(rd))
+grps.rd <- cutree(hc.rd, k=3)
+
+plot(pc.xray, 1:2, col="grey50", bg=grps.rd, pch=21, cex=1)
+```
+
+This Plot shows that all the possible PCA analysis results come in to 3 main groups. 
+
+
+## Further Investigation 
+
+To visualize the major structural variations in the ensemble the function mktrj() can be used to generate a trajectory PDB file by interpolating along a give PC (eigenvector):
+
+```{r}
+# Visualize first principal component
+pc1 <- mktrj(pc.xray, pc=1, file="pc_1.pdb")
+pc1
+```
+
+Now that I have my `pc_1.pdb` file I can open this file, pc_1.pdb, in Mol*. In a in web browser page visit https://molstar.org/viewer/ and “Open Files” from the left control panel selecting .
+
+
+
+
+
+
+
+
+
