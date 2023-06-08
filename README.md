@@ -14,5 +14,12 @@ Steps to setup and use a git repository
 
 Form class [BIMM143](https://bioboot.github.io/bimm143_S23/)
 
-Class 05: [Data Visualization with ggplot2](
+Class 08: [Unsupervised learning analysis of breast cancer cells](file:///C:/Users/Owner/Documents/UCSD%20Classes/BIMM%20143/BIMM%20143%20Assignment%20PDFs/class08.pdf)
+
+Class 09: [Structural Bioinformatics](file:///C:/Users/Owner/Documents/UCSD%20Classes/BIMM%20143/BIMM%20143%20Assignment%20PDFs/class09.pdf)
+
+Class 11: [Genome informatics](file:///C:/Users/Owner/Documents/UCSD%20Classes/BIMM%20143/BIMM%20143%20Assignment%20PDFs/class11.pdf)
+
+Class 12: [Transcriptomics and the analysis of RNA-Seq data](file:///C:/Users/Owner/Documents/UCSD%20Classes/BIMM%20143/BIMM%20143%20Assignment%20PDFs/class_12&13-beginning.pdf)
+
 
